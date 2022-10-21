@@ -1,0 +1,23 @@
+{
+    "name": "br",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon app.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "body-parser": "^1.20.0",
+        "express": "^4.18.1",
+        "express-validator": "^6.14.2",
+        "mongoose": "^6.6.2",
+        "mongoose-unique-validator": "^3.1.0",
+        "multer": "^1.4.5-lts.1",
+        "nodemailer": "^6.7.8",
+        "nodemon": "^2.0.20",
+        "uuid": "^9.0.0"
+    }
+}
