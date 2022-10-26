@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 });
 
 // api routes
-app.use('/api/auth', authRoutes);
+app.use('/api', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/product', productRoutes);
 app.use('/api/comment', commentRoutes);

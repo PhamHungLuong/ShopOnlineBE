@@ -6,6 +6,36 @@ const Comment = require('../models/comment');
 const User = require('../models/user');
 const Product = require('../models/product');
 
+const getCommentsByProductId = async (req, res, next) => {
+    const productId = req.params.pid;
+
+    let product;
+    let comments;
+    try {
+        product = await Product.findById(productId);
+        comments = await Comment.find({ ofProduct: productId }).populate(
+            'creator',
+        );
+    } catch (err) {
+        const error = new HttpError(
+            'Something went wrong, please try again',
+            500,
+        );
+        return next(error);
+    }
+
+    if (!product) {
+        const error = new HttpError('product does not exist', 500);
+        return next(error);
+    }
+
+    res.status(200).json({
+        comments: comments.map((comment) => {
+            return comment.toObject({ getters: true });
+        }),
+    });
+};
+
 const postComment = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -48,15 +78,22 @@ const postComment = async (req, res, next) => {
         await product.save({ session: ss });
         await ss.commitTransaction();
     } catch (err) {
+        console.log(err);
         const error = new HttpError(
             'Post comment failed, please try again',
             500,
         );
         return next(error);
     }
+    let commentReturn;
+    try {
+        commentReturn = await commentCreated.populate('creator');
+    } catch (err) {
+        console.log(err);
+    }
 
     res.status(200).json({
-        comment: commentCreated.toObject({ getters: true }),
+        comment: commentReturn.toObject({ getters: true }),
     });
 };
 
@@ -140,6 +177,7 @@ const updateComment = async (req, res, next) => {
     res.status(200).json({ comment: comment.toObject({ getters: true }) });
 };
 
+exports.getCommentsByProductId = getCommentsByProductId;
 exports.postComment = postComment;
 exports.deleteComment = deleteComment;
 exports.updateComment = updateComment;

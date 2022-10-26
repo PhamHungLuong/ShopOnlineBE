@@ -5,6 +5,8 @@ const commentControllers = require('../controllers/commentControllers');
 
 const router = express.Router();
 
+router.get('/product/:pid', commentControllers.getCommentsByProductId);
+
 router.post(
     '/',
     [check('content').not().isEmpty()],

@@ -7,7 +7,7 @@ const productSchema = new schema({
     description: { type: String, require: true },
     price: { type: Number, require: true },
     size: { type: String, require: true },
-    image: { type: String, required: true },
+    image: { type: String },
     creator: { type: mongoose.Types.ObjectId, require: true, ref: 'User' },
     comments: [
         { type: mongoose.Types.ObjectId, require: true, ref: 'Comment' },

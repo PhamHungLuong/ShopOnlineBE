@@ -32,7 +32,7 @@ const getProductById = async (req, res, next) => {
 
     let product;
     try {
-        product = await Product.findById(productId)
+        product = await Product.findById(productId).populate('creator');
     } catch (err) {
         const error = new HttpError('Failed, please check again!', 500);
         return next(error);
@@ -72,6 +72,7 @@ const createProduct = async (req, res, next) => {
         description,
         price,
         size,
+        image: '',
         comment: [],
         creator: creator,
     });
@@ -84,6 +85,7 @@ const createProduct = async (req, res, next) => {
         await user.save({ session: ss });
         await ss.commitTransaction();
     } catch (err) {
+        console.log(err);
         const error = new HttpError('Creating failed, try again please');
         return next(error);
     }

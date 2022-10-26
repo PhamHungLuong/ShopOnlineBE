@@ -38,11 +38,16 @@ const login = async (req, res, next) => {
     }
 
     if (!isValidPassword) {
-        const error = new HttpError('wrong password ', 500);
-        return next(error);
+        res.json({ message: 'wrong password' });
+    } else {
+        res.json({
+            userId: existingUser.id,
+            name: existingUser.name,
+            email: existingUser.email,
+            password: existingUser.password,
+            isAdmin: existingUser.isAdmin,
+        });
     }
-
-    res.json({ email: existingUser.toObject({ getters: true }) });
 };
 
 const signup = async (req, res, next) => {
@@ -100,8 +105,10 @@ const signup = async (req, res, next) => {
 
     res.status(201).json({
         userId: createdUser.id,
-        isAdmin: createdUser.isAdmin,
         name: createdUser.name,
+        email: createdUser.email,
+        password: createdUser.password,
+        isAdmin: createdUser.isAdmin,
     });
 };
 
