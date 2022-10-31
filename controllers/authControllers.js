@@ -9,7 +9,7 @@ const login = async (req, res, next) => {
         return next(
             new HttpError(
                 'Invalid inputs passed, please check your data.',
-                422,
+                400,
             ),
         );
     }
@@ -20,12 +20,15 @@ const login = async (req, res, next) => {
     try {
         existingUser = await User.findOne({ email: email });
     } catch (err) {
-        const error = new HttpError('Could not login, pleaser try again.', 500);
+        const error = new HttpError(
+            'Something went wrong, please try again',
+            500,
+        );
         return next(error);
     }
 
     if (!existingUser) {
-        const error = new HttpError('No valid email address found.', 403);
+        const error = new HttpError('No valid email address found.', 400);
         return next(error);
     }
 
@@ -33,14 +36,14 @@ const login = async (req, res, next) => {
     try {
         isValidPassword = existingUser.password === password ? true : false;
     } catch (err) {
-        const error = new HttpError('Could not login, please try again', 403);
+        const error = new HttpError('Could not login, please try again', 500);
         return next(error);
     }
 
     if (!isValidPassword) {
-        res.json({ message: 'wrong password' });
+        res.status(200).json({ message: 'wrong password' });
     } else {
-        res.json({
+        res.status(200).json({
             userId: existingUser.id,
             name: existingUser.name,
             email: existingUser.email,
@@ -56,7 +59,7 @@ const signup = async (req, res, next) => {
         return next(
             new HttpError(
                 'Invalid inputs passed, please check your data.',
-                422,
+                400,
             ),
         );
     }
@@ -69,7 +72,7 @@ const signup = async (req, res, next) => {
     } catch (err) {
         const error = new HttpError(
             'Something went wrong, please try again',
-            422,
+            500,
         );
         return next(error);
     }
@@ -77,7 +80,7 @@ const signup = async (req, res, next) => {
     if (existingUser) {
         const error = new HttpError(
             'Account already exists, please check your email ',
-            422,
+            400,
         );
         return next(error);
     }
@@ -95,7 +98,6 @@ const signup = async (req, res, next) => {
     try {
         await createdUser.save();
     } catch (err) {
-        console.log(err);
         const error = new HttpError(
             'Could not create user, please try again later.',
             500,

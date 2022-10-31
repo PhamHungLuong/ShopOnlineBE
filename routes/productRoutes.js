@@ -11,6 +11,8 @@ router.get('/:pid', productControllers.getProductById);
 
 router.get('/', productControllers.getProducts);
 
+router.get('/user/:uid', productControllers.getProductsByUserId);
+
 router.post(
     '/',
     [

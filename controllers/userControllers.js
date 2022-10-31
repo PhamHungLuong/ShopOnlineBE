@@ -7,7 +7,7 @@ const updateUser = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return next(
-            new HttpError('Invalid inputs, please check your data.', 422),
+            new HttpError('Invalid inputs, please check your data.', 400),
         );
     }
 
@@ -31,21 +31,18 @@ const updateUser = async (req, res, next) => {
         return next(error);
     }
 
-    console.log(req.file.path);
-
     user.name = name;
     user.password = password;
-    user.image = req.file.path;
+    user.image = req.body.image;
 
     try {
         await user.save();
     } catch (err) {
-        console.log(err);
         const error = new HttpError('Something went wrong, please try again');
         return next(error);
     }
 
-    res.status(200).json({ message: 'Success' });
+    res.status(201).json({ message: 'Success' });
 };
 
 const getUserById = async (req, res, next) => {
@@ -67,6 +64,8 @@ const getUserById = async (req, res, next) => {
         const error = new HttpError('Failed, User existed', 402);
         return next(error);
     }
+
+    console.log(userExisting);
 
     res.status(200).json({ user: userExisting.toObject({ getters: true }) });
 };

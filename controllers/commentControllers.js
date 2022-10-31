@@ -25,7 +25,7 @@ const getCommentsByProductId = async (req, res, next) => {
     }
 
     if (!product) {
-        const error = new HttpError('product does not exist', 500);
+        const error = new HttpError('Product does not exist', 400);
         return next(error);
     }
 
@@ -39,7 +39,7 @@ const getCommentsByProductId = async (req, res, next) => {
 const postComment = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return next(new HttpError('Failed, please check your input.', 422));
+        return next(new HttpError('Failed, please check your input.', 400));
     }
 
     const { content, creator, ofProduct } = req.body;
@@ -50,14 +50,17 @@ const postComment = async (req, res, next) => {
         user = await User.findById(creator);
         product = await Product.findById(ofProduct);
     } catch (err) {
-        const error = new HttpError('Failed, please try again', 500);
+        const error = new HttpError(
+            'Something went wrong, please try again',
+            500,
+        );
         return next(error);
     }
 
     if (!user && !product) {
         const error = new HttpError(
             'Failed,Maybe User or Product existed',
-            402,
+            400,
         );
         return next(error);
     }
@@ -89,10 +92,11 @@ const postComment = async (req, res, next) => {
     try {
         commentReturn = await commentCreated.populate('creator');
     } catch (err) {
-        console.log(err);
+        const error = new HttpError('Something went wrong, please try again');
+        next(error);
     }
 
-    res.status(200).json({
+    res.status(201).json({
         comment: commentReturn.toObject({ getters: true }),
     });
 };
@@ -108,7 +112,7 @@ const deleteComment = async (req, res, next) => {
     } catch (err) {
         const error = new HttpError(
             'Something went wrong, please try again!',
-            402,
+            500,
         );
         return next(error);
     }
@@ -128,7 +132,7 @@ const deleteComment = async (req, res, next) => {
         await comment.remove({ session: ss });
         ss.commitTransaction();
     } catch (err) {
-        const error = new HttpError('Deleting Failed, please try again', 402);
+        const error = new HttpError('Deleting Failed, please try again', 500);
         return next(error);
     }
 
@@ -138,7 +142,7 @@ const deleteComment = async (req, res, next) => {
 const updateComment = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return next(new HttpError('Failed, please check your input.', 422));
+        return next(new HttpError('Failed, please check your input.', 400));
     }
 
     const commentId = req.params.cid;
@@ -157,7 +161,7 @@ const updateComment = async (req, res, next) => {
     if (!comment) {
         const error = new HttpError(
             'Invalid Id comment, please try again',
-            402,
+            400,
         );
         return next(error);
     }
@@ -169,12 +173,12 @@ const updateComment = async (req, res, next) => {
     } catch (err) {
         const error = new HttpError(
             'Something went wrong, You cant update comment',
-            402,
+            500,
         );
         return next(error);
     }
 
-    res.status(200).json({ comment: comment.toObject({ getters: true }) });
+    res.status(201).json({ comment: comment.toObject({ getters: true }) });
 };
 
 exports.getCommentsByProductId = getCommentsByProductId;

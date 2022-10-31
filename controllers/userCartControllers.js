@@ -6,7 +6,7 @@ const Cart = require('../models/cart');
 const User = require('../models/user');
 const Product = require('../models/product');
 
-const getListCart = async (req, res, next) => {
+const getListCartByUserId = async (req, res, next) => {
     const userId = req.params.uid;
 
     let userExisting;
@@ -21,7 +21,7 @@ const getListCart = async (req, res, next) => {
     }
 
     if (!userExisting) {
-        const error = new HttpError('Failed, User existed', 402);
+        const error = new HttpError('Failed, User existed', 400);
         return next(error);
     }
 
@@ -46,7 +46,7 @@ const getListCart = async (req, res, next) => {
 const addProductToCart = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return next(new HttpError('Failed, please check your input.', 422));
+        return next(new HttpError('Failed, please check your input.', 400));
     }
 
     const { amount, productId, owner } = req.body;
@@ -66,7 +66,12 @@ const addProductToCart = async (req, res, next) => {
     }
 
     if (!user && !product) {
-        const error = new HttpError('User or Product does not exist ', 402);
+        const error = new HttpError('User or Product does not exist ', 400);
+        return next(error);
+    }
+
+    if (amount === 0) {
+        const error = new HttpError('Invalid Amount Product', 400);
         return next(error);
     }
 
@@ -85,15 +90,25 @@ const addProductToCart = async (req, res, next) => {
         await user.save({ session: ss });
         await ss.commitTransaction();
     } catch (err) {
-        console.log(err);
         const error = new HttpError(
             'Could not add to your cart, please try again',
-            402,
+            500,
         );
         return next(error);
     }
 
-    res.status(200).json({ product: cartCreated.toObject({ getters: true }) });
+    let cartReturn;
+    try {
+        cartReturn = await cartCreated.populate('productId');
+    } catch (err) {
+        const error = new HttpError(
+            'Something went wrong, please try again',
+            500,
+        );
+        return next(error);
+    }
+
+    res.status(201).json({ product: cartReturn.toObject({ getters: true }) });
 };
 
 const updateCartProduct = async (req, res, next) => {
@@ -103,7 +118,7 @@ const updateCartProduct = async (req, res, next) => {
     try {
         cartProduct = await Cart.findById(cartId);
     } catch (err) {
-        const error = new HttpError('Something went wrong', 402);
+        const error = new HttpError('Something went wrong', 500);
         return next(error);
     }
 
@@ -129,7 +144,7 @@ const updateCartProduct = async (req, res, next) => {
         return next(error);
     }
 
-    res.status(200).json({
+    res.status(201).json({
         cartProduct: cartProduct.toObject({ getters: true }),
     });
 };
@@ -149,7 +164,7 @@ const payment = async (req, res, next) => {
 
     if (!cartProduct) {
         const error = new HttpError(
-            'Cart of product does not exist, please try again',
+            'Cart of product does not exist, please try again',400
         );
         return next(error);
     }
@@ -159,7 +174,7 @@ const payment = async (req, res, next) => {
     try {
         cartProduct.save();
     } catch (err) {
-        const error = new HttpError('Could not pay, please try again', 402);
+        const error = new HttpError('Could not pay, please try again', 500);
         return next(error);
     }
 
@@ -173,7 +188,7 @@ const deleteCart = async (req, res, next) => {
 
     let cart;
     try {
-        cart = await Cart.findById(cartId);
+        cart = await Cart.findById(cartId).populate('owner');
     } catch (err) {
         const error = new HttpError(
             'Something went wrong, please try again',
@@ -185,13 +200,18 @@ const deleteCart = async (req, res, next) => {
     if (!cart) {
         const error = new HttpError(
             'Invalid ID, could not find matching product',
-            404,
+            400,
         );
         return next(error);
     }
 
     try {
-        cart.remove();
+        const ss = await mongoose.startSession();
+        ss.startTransaction();
+        cart.owner.cart.pull(cart);
+        await cart.owner.save({ session: ss });
+        await cart.remove({ session: ss });
+        await ss.commitTransaction();
     } catch (err) {
         const error = new HttpError('Something went wrong', 500);
         return next(error);
@@ -200,7 +220,7 @@ const deleteCart = async (req, res, next) => {
     res.status(200).json({ message: 'delete Success' });
 };
 
-exports.getListCart = getListCart;
+exports.getListCartByUserId = getListCartByUserId;
 exports.deleteCart = deleteCart;
 exports.addProductToCart = addProductToCart;
 exports.updateCartProduct = updateCartProduct;

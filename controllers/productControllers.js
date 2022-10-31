@@ -34,7 +34,10 @@ const getProductById = async (req, res, next) => {
     try {
         product = await Product.findById(productId).populate('creator');
     } catch (err) {
-        const error = new HttpError('Failed, please check again!', 500);
+        const error = new HttpError(
+            'Something went wrong, please try again',
+            500,
+        );
         return next(error);
     }
 
@@ -43,13 +46,13 @@ const getProductById = async (req, res, next) => {
         return next(error);
     }
 
-    res.json({ product: product.toObject({ getters: true }) });
+    res.status(200).json({ product: product.toObject({ getters: true }) });
 };
 
 const createProduct = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return next(new HttpError('Failed, please check your input.', 422));
+        return next(new HttpError('Failed, please check your input.', 400));
     }
 
     const { name, description, price, size, creator } = req.body;
@@ -85,12 +88,11 @@ const createProduct = async (req, res, next) => {
         await user.save({ session: ss });
         await ss.commitTransaction();
     } catch (err) {
-        console.log(err);
-        const error = new HttpError('Creating failed, try again please');
+        const error = new HttpError('Creating failed, try again please',500);
         return next(error);
     }
 
-    res.status(200).json({
+    res.status(201).json({
         product: productCreated.toObject({ getters: true }),
     });
 };
@@ -99,7 +101,7 @@ const updateProduct = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return next(
-            new HttpError('Invalid inputs, please check your data.', 422),
+            new HttpError('Invalid inputs, please check your data.', 400),
         );
     }
 
@@ -121,7 +123,7 @@ const updateProduct = async (req, res, next) => {
     }
 
     if (!product && !userCreator) {
-        const error = new HttpError('Product or User does not exist', 401);
+        const error = new HttpError('Product or User does not exist', 400);
         return next(error);
     }
 
@@ -133,11 +135,11 @@ const updateProduct = async (req, res, next) => {
     try {
         await product.save();
     } catch (err) {
-        const error = new HttpError('Something went wrong, please try again');
+        const error = new HttpError('Something went wrong, please try again',500);
         return next(error);
     }
 
-    res.status(200).json({ product: product.toObject({ getters: true }) });
+    res.status(201).json({ product: product.toObject({ getters: true }) });
 };
 
 const deleteProduct = async (req, res, next) => {
@@ -160,7 +162,7 @@ const deleteProduct = async (req, res, next) => {
     if (!product) {
         const error = new HttpError(
             'Invalid ID, could not find matching product',
-            404,
+            400,
         );
         return next(error);
     }
@@ -222,7 +224,6 @@ const searchProduct = async (req, res, next) => {
             res.status(200).json({ message: 'Could not find product' });
         }
     } catch (err) {
-        console.log(err);
         const error = new HttpError(
             'Something went wrong, please try again!',
             500,
@@ -231,7 +232,31 @@ const searchProduct = async (req, res, next) => {
     }
 };
 
+const getProductsByUserId = async (req, res, next) => {
+    const userId = req.params.uid;
+
+    let products;
+    try {
+        products = await Product.find({ creator: userId });
+    } catch (err) {
+        const error = new HttpError('Something went wrong', 500);
+        return next(error);
+    }
+
+    if (!products) {
+        const error = new HttpError('product does not exist', 400);
+        return next(error);
+    }
+
+    res.status(200).json({
+        products: products.map((product) => {
+            return product.toObject({ getters: true });
+        }),
+    });
+};
+
 exports.getProducts = getProducts;
+exports.getProductsByUserId = getProductsByUserId;
 exports.getProductById = getProductById;
 exports.updateProduct = updateProduct;
 exports.deleteProduct = deleteProduct;

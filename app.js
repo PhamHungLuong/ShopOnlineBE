@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -14,8 +17,10 @@ const app = express();
 // analysis data
 app.use(bodyParser.json());
 
+app.use('/uploads/images', express.static(path.join('uploads', 'images')));
+
 // turn off CORS
-app.use((req, res, next) => {
+app.use('*', (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader(
         'Access-Control-Allow-Headers',
@@ -45,11 +50,16 @@ app.use((req, res, next) => {
 
 // res message error
 app.use((error, req, res, next) => {
+    if (req.file) {
+        fs.unlink(req.file.path, (err) => {
+            console.log(err);
+        });
+    }
     if (res.headerSent) {
         return next(error);
     }
     res.status(error.code || 500);
-    res.json({ message: error.message || 'An unknown error occurred!' });
+    res.json({ message: error.message || 'An unknown error occurred' });
 });
 
 mongoose

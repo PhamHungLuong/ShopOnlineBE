@@ -1,4 +1,3 @@
-const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 
 const HttpError = require('../models/http-error');
@@ -19,13 +18,13 @@ const getUser = async (req, res, next) => {
         );
     } catch (err) {
         const error = new HttpError(
-            'Fetching users failed, please try again later.',
+            'Something went wrong, please try again',
             500,
         );
         return next(error);
     }
 
-    res.json({
+    res.status(200).json({
         users: users.map((user) => {
             return user.toObject({ getters: true });
         }),
@@ -70,12 +69,11 @@ const deleteUser = async (req, res, next) => {
         await user.remove({ session: ss });
         await ss.commitTransaction();
     } catch (err) {
-        console.log(err);
         const error = new HttpError('Cant delete user, please try again', 500);
         return next(error);
     }
 
-    res.status(201).json({ message: 'Deleted User' });
+    res.status(200).json({ message: 'Deleted User' });
 };
 
 const deleteProduct = async (req, res, next) => {
@@ -94,8 +92,8 @@ const deleteProduct = async (req, res, next) => {
 
     if (!product) {
         const error = new HttpError(
-            'Cant not find product by this Id, please try again',
-            402,
+            'Cant not find product by this id, please try again',
+            400,
         );
         return next(error);
     }

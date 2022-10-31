@@ -5,9 +5,13 @@ const userCartControllers = require('../controllers/userCartControllers');
 
 const router = express.Router();
 
-router.get('/:uid', userCartControllers.getListCart);
+router.get('/:uid', userCartControllers.getListCartByUserId);
 
-router.post('/add', userCartControllers.addProductToCart);
+router.post(
+    '/add',
+    [check('amount').isNumeric()],
+    userCartControllers.addProductToCart,
+);
 
 router.patch(
     '/:cid',
