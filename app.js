@@ -4,6 +4,7 @@ const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const HttpError = require('./models/http-error');
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -17,8 +18,6 @@ const app = express();
 // analysis data
 app.use(bodyParser.json());
 
-app.use('/uploads/images', express.static(path.join('uploads', 'images')));
-
 // turn off CORS
 app.use('*', (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -30,6 +29,7 @@ app.use('*', (req, res, next) => {
         'Access-Control-Allow-Methods',
         'GET, POST, PATCH, DELETE, OPTIONS',
     );
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     next();
 });
@@ -42,6 +42,8 @@ app.use('/api/comment', commentRoutes);
 app.use('/api/cart', userCartRoutes);
 app.use('/api/user', userRoutes);
 
+app.use('/uploads/images', express.static(path.join('uploads', 'images')));
+
 // error
 app.use((req, res, next) => {
     const error = new HttpError('Could not find this route.', 404);
@@ -50,11 +52,12 @@ app.use((req, res, next) => {
 
 // res message error
 app.use((error, req, res, next) => {
-    if (req.file) {
-        fs.unlink(req.file.path, (err) => {
-            console.log(err);
-        });
-    }
+    // if (req.file) {
+    //     fs.unlink(req.file.path, (err) => {
+    //         console.log(err);
+    //     });
+    // }
+
     if (res.headerSent) {
         return next(error);
     }

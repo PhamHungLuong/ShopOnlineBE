@@ -75,7 +75,7 @@ const createProduct = async (req, res, next) => {
         description,
         price,
         size,
-        image: '',
+        image: req.body.image,
         comment: [],
         creator: creator,
     });
@@ -88,7 +88,7 @@ const createProduct = async (req, res, next) => {
         await user.save({ session: ss });
         await ss.commitTransaction();
     } catch (err) {
-        const error = new HttpError('Creating failed, try again please',500);
+        const error = new HttpError('Creating failed, try again please', 500);
         return next(error);
     }
 
@@ -135,7 +135,10 @@ const updateProduct = async (req, res, next) => {
     try {
         await product.save();
     } catch (err) {
-        const error = new HttpError('Something went wrong, please try again',500);
+        const error = new HttpError(
+            'Something went wrong, please try again',
+            500,
+        );
         return next(error);
     }
 
