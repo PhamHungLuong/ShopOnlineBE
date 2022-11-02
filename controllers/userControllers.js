@@ -65,8 +65,6 @@ const getUserById = async (req, res, next) => {
         return next(error);
     }
 
-    console.log(userExisting);
-
     res.status(200).json({ user: userExisting.toObject({ getters: true }) });
 };
 

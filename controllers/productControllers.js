@@ -57,7 +57,6 @@ const createProduct = async (req, res, next) => {
 
     const { name, description, price, size, creator } = req.body;
 
-    let user;
     try {
         user = await User.findById(creator);
     } catch (err) {
@@ -105,7 +104,7 @@ const updateProduct = async (req, res, next) => {
         );
     }
 
-    const { name, description, price, size, creator } = req.body;
+    const { name, description, price, size } = req.body;
     const productId = req.params.pid;
 
     let product;
@@ -113,7 +112,6 @@ const updateProduct = async (req, res, next) => {
 
     try {
         product = await Product.findById(productId);
-        userCreator = await User.findById(creator);
     } catch (err) {
         const error = new HttpError(
             'Something went wrong, please try again!',
@@ -131,6 +129,7 @@ const updateProduct = async (req, res, next) => {
     product.description = description;
     product.price = price;
     product.size = size;
+    product.image = req.body.image;
 
     try {
         await product.save();
